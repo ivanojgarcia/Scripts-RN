@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" href="/euf/assets/images/icons/icon-template.png" type="image/png">
+
+     <!-- Librerias de Bootstrap -->
+     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <!-- vueJS -->
+    <script src="js/vue.js"></script>
+    <script src="js/es6-promise.auto.min.js"></script>
+
+    <!-- Axios Vue -->
+    <script src="js/axios.min.js"></script>
+
+    <!-- iconos -->
+    <link href="fontawesome-web/css/all.css" rel="stylesheet">
+
+    <!-- Summernote -->
+    <link href="plugins/summernote/dist/summernote.css" rel="stylesheet">
+    <link href="plugins/summernote/dist/summernote-bs4.css" rel="stylesheet">
+    
+
+    <title>Template Create</title>
+
+    <style>
+        .modal-dialog, pre, code {
+            min-height:500px !important;
+        }
+        .text-script{
+            width: 100%;
+            padding: 10px;
+            background: #1d1e22;
+            color: #96b38a;
+            min-height: 350px;
+            border: 0px
+        }
+    </style>
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-primary">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="#">
+            <img src="images/script_logo.png" width="30" height="30" class="d-inline-block align-top" alt="">
+        </a>
+
+        <div class="collapse navbar-collapse text-right" id="navbarTogglerDemo03">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <div>
+                        <a class="btn btn-outline-light" href="/">Crear Template</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    
+    <!-- Form -->
+    <div class="container my-5" id="app">
+        <h1 class="display-4">{{ title }}</h1>
+        <hr>
+        <!-- First Instructions -->
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">Instrucciones de Uso</h4>
+            <p>El siguiente sistema permite crear de manera dinámica las plantillas principales bajo el framework de estilo <b>Bootstrap</b> 
+            para usarlo debe seleccionar el tipo de elemento a crear.</p>
+            <hr>
+            <p class="mb-0">Importante tomar en cuenta que las plantillas son una base y que se deben personalizar despues de copiado el elemento.</p>
+        </div>
+        <form>
+            <div class="form-group">
+                <label for="selectTemplateType">Seleccione el tipo de componente a agregar</label>
+                <select class="form-control" id="selectTemplateType" v-on:change="changeTemplate" v-model="typeTemplate">
+                    <option :value="list.valueI" v-for="(list,index) in componentList">{{ list.component }}</option>
+                </select>
+            </div>
+        </form>
+        <hr>
+        <div v-if="notIsModal && typeTemplate">
+            <!-- Second Instructions -->
+            <div class="alert alert-secondary " role="alert">
+                <h4 class="alert-heading">Selección de cantidad de elementos</h4>
+                <hr>
+                <p>Seleccione la cantidad de elementos que tendrá el componente, estos serán independientes y funcionales.</p>
+            </div>
+            <div v-if="qQuantityElement">
+                <label for="qComponent">Cantidad de elementos</label>
+                <input  class="form-control" type="number" min="1" max="8" name="qComponent" placeholder="Ingrese la cantidad de componentes" v-model="quantityComponent">
+            </div>
+            <div v-else>
+                <label for="qColumnTable">Cantidad de Columnas</label>
+                <input  class="form-control" type="number" min="1" max="8" name="qColumnTable" placeholder="Ingrese la cantidad de columnas para la tabla" v-model="quantitiesColumnsTable">
+            
+                <label for="qRowTable">Cantidad de Filas</label>
+                <input  class="form-control" type="number" min="1" name="qRowTable" placeholder="Ingrese la cantidad de filas para la tabla" v-model="quantitiesRowsTable">
+            </div>
+        </div>
+        <div v-show="showButton">
+            <input class="mt-5 btn btn-dark" type="button" value="Crear Template" @click="generateTemplate" id="createTemplate">
+            <input class="mt-5 btn btn-success" type="button" value="Refrescar Template" @click="refreshTemplate" id="refreshTemplate">
+        </div>
+        <div class="card text-center mt-2">
+            <div class="card-header text-white bg-primary">
+                Vista previa del componente
+            </div>
+            <!-- Second Instructions -->
+            <div class="alert alert-secondary animated fadeIn " v-if="showAlertGenScript" role="alert">
+                <h4 class="alert-heading">Generar Plantilla</h4>
+                <hr>
+                <p>Previsualice el componente, si es el correcto genere la plantilla, para copiarla solo debe dar click en el botón de <b>Copiar</b> y 
+                automáticamente el elementoe estará copiado, si desea una nueva plantilla también puede hacer  <a @click="refreshTemplate">Click aquí</a>.</p>
+            </div>
+            <br>
+            <div class="card-body text-left">
+                <h5 class="card-title">Visualización del componente</h5>
+                <hr>
+                <div id="contentScript">
+                    <div>
+                        <accordion-template v-if="showAccordion" 
+                            v-bind:componentvalue="componentvalue" v-model="componentvalue">
+                        </accordion-template>
+                        <modal-template v-else-if="showModal"></modal-template>
+                        <tabs-template v-else-if="showTabs"
+                            v-bind:componentvalue="componentvalue" v-model="componentvalue">
+                        </tabs-template>
+                        <tabs-ver-template v-else-if="showTabsVer"
+                            v-bind:componentvalue="componentvalue" v-model="componentvalue">
+                        </tabs-ver-template>
+                        <table-template v-else-if="showTable"
+                            v-bind:numrows="numrows" v-model="numrows" v-bind:numcolumns="numcolumns" v-model="numcolumns">
+                        </table-template>
+                    </div>
+                </div>
+                <button id="btn-gen-script" onclick="getScript()" type="button" class="btn btn-secondary mt-5" data-toggle="modal" data-keyboard="false" data-backdrop="static" data-target=".bd-example-modal-xl">Generar Script</button>
+            </div>
+        </div>                        
+        <!-- Ventana con el contenido del código -->    
+    
+        <!-- Modal -->
+        <div class="modal fade bd-example-modal-xl" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel" aria-hidden="true" id="scriptModal">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalScrollableTitle">Código del elemento</h5>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="text-script" name="" id="textScript"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/master.js"></script>
+    <script src="plugins/summernote/dist/summernote.min.js"></script>
+    <script src="plugins/summernote/dist/summernote-bs4.min.js"></script>
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+        
+        var copyButton = function (context) {
+            var ui = $.summernote.ui;
+            
+            // Creación del botón custom para la copia desde el 
+            var button = ui.button({
+                contents: '<i class="fa fa-copy"/> Copy',
+                tooltip: 'Copy',
+                click: function () {
+                    var markupStr = $('#textScript').summernote('code')
+                    copyToClipboard(markupStr)
+                }
+            });
+            
+            return button.render();   // return button as jquery object
+        }
+        $('#textScript').summernote({
+            height: 300,
+            shortcuts: false,
+            toolbar: [
+                // [groupName, [list of button]]            
+                ['misc',['codeview']],
+                ['mybutton', ['copyBtn']]
+            ],
+            buttons: {
+                copyBtn: copyButton
+            }
+        });
+
+        function copyToClipboard(str) {
+            var success   = true,
+            range     = document.createRange(),
+            selection;
+
+            // Create a temporary element off screen.
+            var tmpElem = $('<div>');
+            tmpElem.css({
+            position: "absolute",
+            left:     "-1000px",
+            top:      "-1000px",
+            });
+            // Add the input value to the temp element.
+            tmpElem.text(str);
+            $("body").append(tmpElem);
+            // Select temp element.
+            range.selectNodeContents(tmpElem.get(0));
+            selection = window.getSelection ();
+            selection.removeAllRanges ();
+            selection.addRange (range);
+            // Lets copy.
+            try { 
+            success = document.execCommand ("copy", false, null);
+            }
+            catch (e) {
+            copyToClipboardFF(str);
+            }
+            if (success) {
+            alert ("La plantilla Script ha sido copiada.");
+            // remove temp element.
+            tmpElem.remove();
+            }
+        }
+        function getScript(){
+            var markupStr = document.getElementById('contentScript').innerHTML;
+            $('#textScript').summernote('code',markupStr)   
+        }        
+    </script>
+  </body>
+</html>
